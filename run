@@ -1,0 +1,58 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+mkdir -p data
+
+DATE=$(date "+%Y-%m-%d")
+
+function monitors() {
+  cat MONITORS.txt | grep -v '^#' | grep -v '^$'
+}
+
+for SITE_URL in $(monitors | awk '{print $1}'); do
+  SITE_ID=$(echo "$SITE_URL" | cut -d/ -f3- | sed 's/[^a-z-]/-/g' | sed 's/--*/-/g')
+  if [ -z "$SITE_URL" ]; then
+    continue
+  fi
+  FILE="data/$DATE-$SITE_ID"
+  if [ ! -e "$FILE.txt" ]; then
+    if [ ! -e "$FILE.html" ]; then
+      echo "Dowloading to $FILE.html"
+      sleep 1
+      curl -s "$SITE_URL" > "$FILE.html"
+    fi
+    echo "Processing $FILE.txt"
+    QUERY="$(monitors | grep "$SITE_URL " | awk '{print $2}')"
+    if [ "$QUERY" = "jq" ]; then
+      QUERY="$(monitors | grep "$SITE_URL " | awk '{print $3}')"
+      cat "$FILE.html" | jq -r "$QUERY" > "$FILE.txt"
+    else
+      cat "$FILE.html" | htmlq "$QUERY" | html2text > "$FILE.txt"
+    fi
+    touch "data/0000-00-00-$SITE_ID.txt"
+    # Find last 2 texts files for that URL
+    FILES=$(ls -1 data/*-$SITE_ID.txt | sort | tail -2)
+    if diff $FILES > /dev/null; then
+      echo no difference detected
+      # cleaning up disk space
+      rm -f "$FILE.html" "$FILE.txt"
+      ln -s $FILES
+    else
+      (diff -U3 $FILES || true) > "$FILE.patch"
+      (
+        echo
+        echo -----------------------------------
+        echo
+        echo " DIFFERENCES DETECTED "
+        echo
+        echo " $SITE_URL"
+        echo
+        echo " Note: diff stored in $FILE.patch"
+        echo
+        echo -----------------------------------
+        echo
+        (diff -U3 $FILES || true)
+      ) | less -RSX
+    fi
+  fi
+done

@@ -1,0 +1,7 @@
+# Mistral.ai news articles
+https://mistral.ai/news/ article
+
+# AIR SDK releases
+# https://airsdk.harman.com/release_notes (with some json magic)
+https://airsdk.harman.com/api/versions/release-notes jq .[0].versionName
+
