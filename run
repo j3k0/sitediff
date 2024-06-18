@@ -1,9 +1,18 @@
 #!/bin/bash
 
+set -e
+
+DATE=$(date "+%Y-%m-%d")
+echo "running $DATE"
+
 cd "$(dirname "$0")"
 mkdir -p data
 
-DATE=$(date "+%Y-%m-%d")
+# delete empty files
+find data -size 0 -delete
+
+# delete old files (1 month old or more)
+find data -not -newerct '1 month ago' -delete
 
 function monitors() {
   cat MONITORS.txt | grep -v '^#' | grep -v '^$'
@@ -15,8 +24,8 @@ for SITE_URL in $(monitors | awk '{print $1}'); do
     continue
   fi
   FILE="data/$DATE-$SITE_ID"
-  if [ ! -e "$FILE.txt" ]; then
-    if [ ! -e "$FILE.html" ]; then
+  if test ! -e "$FILE.txt"; then
+    if test ! -e "$FILE.html"; then
       echo "Dowloading to $FILE.html"
       sleep 1
       curl -s "$SITE_URL" > "$FILE.html"
@@ -35,8 +44,8 @@ for SITE_URL in $(monitors | awk '{print $1}'); do
     if diff $FILES > /dev/null; then
       echo no difference detected
       # cleaning up disk space
-      rm -f "$FILE.html" "$FILE.txt"
-      ln -s $FILES
+      # rm -f "$FILE.html" "$FILE.txt"
+      # ln -s $FILES
     else
       (diff -U3 $FILES || true) > "$FILE.patch"
       (
