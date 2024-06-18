@@ -6,9 +6,10 @@
 
 ### 1- Install dependencies
 
-- curl
-- htmlq
-- html2text
+- `curl`
+- `htmlq` (used for HTML documents)
+- `html2text`
+- `jq` (only used for JSON documents)
 
 ### 2- Create your `MONITORS.txt` file
 
