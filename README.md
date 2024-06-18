@@ -12,15 +12,21 @@
 
 ### 2- Create your `MONITORS.txt` file
 
-Format:
+Line format can be:
+
+```
 URL XpathQuery
+URL jq jqFilter
+# comment
+```
 
 - URL is passed to `curl` for downloading the content.
-- XPath is passed to `htmlq` to isolate the content of interest.
+- XPathQuery is passed to `htmlq` to isolate the content of interest.
+- jqFilter is passed to `jq`
 
 Lines starting with `# ` are ignored.
 
-Check MONITORS.example.txt for an example.
+Check `MONITORS.example.txt` for an example.
 
 ## License
 
